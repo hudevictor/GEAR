@@ -417,7 +417,8 @@ def tokenwise_gearlkivi_tokenQ(input, quantize_bit, group_size=128,r=0,loop=1): 
     # error_lr = error_lr.view(bsz, seq_len, num_head, sep_dim).permute(0, 2, 1, 3)
     return output + error_lr
 
-
+# def H2OCache():
+#     pass
 def compress_insert_function(
     previous_key,
     previous_value,
