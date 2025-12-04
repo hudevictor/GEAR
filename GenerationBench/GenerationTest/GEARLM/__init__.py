@@ -6,4 +6,4 @@ from .Simulated import SimulatedGearLlamaForCausalLM
 
 # from .modeling_llama_h2o import H2OLlamaForCausalLM, LlamaConfig
 from .Simulated import SimulatedGearMistralForCausalLM, MistralConfig
-from .Simulated import LlamaForCausalLMH2O
+#from .Simulated import LlamaForCausalLMH2O

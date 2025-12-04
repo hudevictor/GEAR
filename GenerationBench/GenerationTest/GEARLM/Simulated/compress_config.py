@@ -183,6 +183,7 @@ class CompressionConfig(dict):
     def calculate_compress_ratio_list(self, seqlen, model_dim):
         self.compress_ratio_list = []
         for i, compress_method in enumerate(self.compress_method):
+            print(compress_method)
             if compress_method == None:
                 self.compress_ratio_list.append(
                     self.compress_ratio(compress_method, seqlen, model_dim)
