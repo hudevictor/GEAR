@@ -86,10 +86,12 @@ def extract_ans_mmlu(ans_model):
 def load_model_tokenizer(args):
     from GEARLM import CompressionConfig,SimulatedGearLlamaForCausalLM,SimulatedGearMistralForCausalLM
     model_kwargs = {}
+    print("aaa:",args.model)
     if any([name in args.model for name in ["Llama-2", "Vicuna", "Llama-3"]]):
         model_kwargs["torch_dtype"] = torch.float16 
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
+        print("token:",args.hf_token)
         model_kwargs["cache_dir"] = "../cache"
     compress_config = (
         None
@@ -116,9 +118,12 @@ def load_model_tokenizer(args):
             stream_grouping=args.stream_grouping,
         )
     )
+    
+    #print("cc1:",compress_config)
     if compress_config is not None:
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
+    #print("cc:",compress_config)
     config = transformers.AutoConfig.from_pretrained(
         args.model, use_auth_token=True, token=args.hf_token, cache_dir = "../cache"
     )
@@ -129,6 +134,7 @@ def load_model_tokenizer(args):
                 **model_kwargs,
                 compress_config=compress_config,
             )
+        print(model)
     elif "Mistral" in args.model:
         model = SimulatedGearMistralForCausalLM.from_pretrained(
                 args.model,
@@ -353,6 +359,7 @@ if __name__ == '__main__':
     split = args.dataset_split if args.example_subset is None else f"{args.dataset_split}[{args.example_subset}]"
 
     total_acc = 0
+    print("ds:",args.dataset)
     dataset = load_dataset(args.dataset, split=split)
     eval_dataset = preprocess_aqua_dataset(dataset)
     dataloader = torch.utils.data.DataLoader(
