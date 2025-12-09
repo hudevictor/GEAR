@@ -174,6 +174,21 @@ class LlamaAttention_GEAR(nn.Module):
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
 
+
+    def repeat_kv(self,hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
+        """
+        这是 GQA 的核心：将 KV 的头数复制扩展，以匹配 Query 的头数。
+        """
+        batch, num_key_value_heads, slen, head_dim = hidden_states.shape
+        if n_rep == 1:
+            return hidden_states
+        
+        # 扩展维度并复制
+        hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)
+        # 重新变回 [Batch, num_attention_heads, Seq_Len, Head_Dim]
+        return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
+
+
     def forward(
         self,
         hidden_states: torch.Tensor,
@@ -201,9 +216,14 @@ class LlamaAttention_GEAR(nn.Module):
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
             kv_seq_len += past_key_value[8]
-        cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
+        cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len,position_ids=position_ids)
         query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
-        assert self.num_key_value_groups == 1
+      #  assert self.num_key_value_groups == 1
+        n_rep = self.num_heads // self.num_key_value_heads
+        key_states = self.repeat_kv(key_states, n_rep)   # 变成 [B, 24, L, D]
+        value_states = self.repeat_kv(value_states, n_rep) # 变成 [B, 24, L, D]
+
+
         # [bsz, nh, t, hd]
         if past_key_value is not None:
             key_states_quant_trans = past_key_value[0]
