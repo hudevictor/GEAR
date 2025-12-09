@@ -400,13 +400,14 @@ class LlamaAttention(nn.Module):
                 # self.k_cache = PiCache((1, 12, 1023, 64), 100, 4, 0, 200)
                 # self.v_cache = PiCache((1, 12, 1023, 64), 100, 4, 0, 200)
                 # TODO 1023 change to inputsize
+                #self.rank是浮点数，而rand的第二个参数需要整数
                 if self.hidden_size > self.rank:
                     self.pbase1 = [
-                        torch.rand(self.hidden_size, self.rank).to(self.dveice_num)
+                        torch.rand(self.hidden_size, int(self.rank)).to(self.dveice_num)
                     ]
                     # max input size is 1023
                     self.qbase1 = [
-                        torch.rand(config.max_position_embeddings - 1, self.rank).to(
+                        torch.rand(config.max_position_embeddings - 1, int(self.rank)).to(
                             self.dveice_num
                         )
                     ]
@@ -414,10 +415,10 @@ class LlamaAttention(nn.Module):
                     self.pbase1, self.qbase1 = None, None
                 if self.hidden_size > self.rankv:
                     self.pbase2 = [
-                        torch.rand(self.hidden_size, self.rankv).to(self.dveice_num)
+                        torch.rand(self.hidden_size, int(self.rankv)).to(self.dveice_num)
                     ]
                     self.qbase2 = [
-                        torch.rand(config.max_position_embeddings - 1, self.rankv).to(
+                        torch.rand(config.max_position_embeddings - 1, int(self.rankv)).to(
                             self.dveice_num
                         )
                     ]
